@@ -72,17 +72,18 @@ def create_note():
     
 @app.route('/api/notes', methods=['GET'])
 def get_notes():
-    if not notes_collection:
+    if notes_collection == NotImplemented:
         return jsonify({"error": "Database not connected"}), 500
     
     try:
         all_notes = list(notes_collection.find({}))
         serialized_notes = [serialize_doc(note) for note in all_notes]
-        return jsonify(serialize_notes), 200
+        return jsonify(serialized_notes), 200
     except OperationFailure as e:
         return jsonify({"error": "Database operation failed", "details": str(e)}), 500
     except Exception as e:
         return jsonify({"error":"An error occurred", "details": str(e)}), 500
+        
     
 if __name__ == '__main__':
     if not client:
