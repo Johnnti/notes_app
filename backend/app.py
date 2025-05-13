@@ -52,4 +52,42 @@ def home():
 def create_note():
     if not notes_collection:
         return jsonify({"error": "Database not connected"}), 500
+    try:
+        data = request.get_json()
+        if not data or 'content' not in data:
+            return jsonify({'error':"Missing 'content' in request body"}), 400
+        
+        note_content = data.get('content')
+        
+        new_note = {'content': note_content}
+        
+        result = notes_collection.insert_one(new_note)
+        created_note = notes_collection.find_one({"_id": result.inserted_id})
+        
+        return jsonify(serialize_doc(created_note)), 201
+    except OperationFailure as e:
+        return jsonify({"error": "Database operation failed", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
     
+@app.route('/api/notes', methods=['GET'])
+def get_notes():
+    if not notes_collection:
+        return jsonify({"error": "Database not connected"}), 500
+    
+    try:
+        all_notes = list(notes_collection.find({}))
+        serialized_notes = [serialize_doc(note) for note in all_notes]
+        return jsonify(serialize_notes), 200
+    except OperationFailure as e:
+        return jsonify({"error": "Database operation failed", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error":"An error occurred", "details": str(e)}), 500
+    
+if __name__ == '__main__':
+    if not client:
+        print("CRITICAL: MongoDB client not initialized. Flask app might not work correctly.")
+        
+    app.run(debug=os.getenv("FLASK_DEBUG", "False").lower() == "true", host="0.0.0.0", port=5000)
+        
+        
