@@ -115,7 +115,7 @@ export default function HomePage(): React.ReactElement {
         value={newNoteContent}
         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewNoteContent(e.target.value) } 
         placeholder="Enter your note here..."
-        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
+        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out text-black"
         rows={4}
         disabled={isLoading}
         />
@@ -143,7 +143,7 @@ export default function HomePage(): React.ReactElement {
         {notes.length > 0 && (
           <ul className="space-y-4">
             {notes.slice().reverse().map((note: Note) => (
-              <li key={note._id} className="p-4 border boder-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out">
+              <li key={note._id} className="p-4 border border-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out">
                 <p className="whitespace-pre-wrap text-gray-800">{note.content}</p>
               </li>
             ))}
