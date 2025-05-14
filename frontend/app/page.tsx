@@ -87,6 +87,7 @@ export default function HomePage(): React.ReactElement {
         );
       }
       //const createdNote = await response.json() as Note;
+      setNewNoteContent("")
     } catch (e: unknown) {
       console.error("Failed to create note: ", e);
       if (e instanceof Error) {
@@ -98,9 +99,13 @@ export default function HomePage(): React.ReactElement {
       setIsLoading(false);
     }
   };
+  const handleDelete = async (_id: string) => {
+    await fetch(API_URL+`/notes/${_id}`, {method: 'DELETE'})
+    fetchNotes()
+  }
 
   return (
-    <div className="container mx-auto p-4 font-sans">
+    <div className="container mx-auto p-4 font-sans lg:px-[20%]">
       <header className="text-center mb-8">
         <h1 className="text-4xl font-bold text-blue-600">Notes App</h1>
         <p className="text-gray-600">
@@ -144,8 +149,8 @@ export default function HomePage(): React.ReactElement {
           <ul className="space-y-4">
             {notes.slice().reverse().map((note: Note) => (
               <li key={note._id} className="p-4 border border-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out flex">
-                <p className="w-1 whitespace-pre-wrap text-gray-800">{note.content}</p>
-                <input type="button" className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-blue-50 focus:ring-opacity-50 transition duration-150 ease-in-out"/>
+                <p className="w-5/6 whitespace-pre-wrap text-gray-800">{note.content}</p>
+                <button type="submit" onClick={() => handleDelete(note._id)} className="w-1/6 h-10 w-20 p-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-blue-50 focus:ring-opacity-50 transition duration-150 ease-in-out">Delete</button>
               </li>
             ))}
           </ul>
