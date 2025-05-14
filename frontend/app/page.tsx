@@ -87,6 +87,7 @@ export default function HomePage(): React.ReactElement {
         );
       }
       //const createdNote = await response.json() as Note;
+      fetchNotes()
       setNewNoteContent("")
     } catch (e: unknown) {
       console.error("Failed to create note: ", e);
@@ -148,9 +149,9 @@ export default function HomePage(): React.ReactElement {
         {notes.length > 0 && (
           <ul className="space-y-4">
             {notes.slice().reverse().map((note: Note) => (
-              <li key={note._id} className="p-4 border border-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out flex">
+              <li key={note._id} className="p-4 px-2 border border-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out flex">
                 <p className="w-5/6 whitespace-pre-wrap text-gray-800">{note.content}</p>
-                <button type="submit" onClick={() => handleDelete(note._id)} className="w-1/6 h-10 w-20 p-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-blue-50 focus:ring-opacity-50 transition duration-150 ease-in-out">Delete</button>
+                <button onClick={() => handleDelete(note._id)} className="w-1/6 h-10 w-20 p-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-red-600 focus:outline-none focus:ring-blue-50 focus:ring-opacity-50 transition duration-150 ease-in-out">Delete</button>
               </li>
             ))}
           </ul>
