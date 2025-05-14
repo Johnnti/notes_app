@@ -39,7 +39,7 @@ except Exception as e:
 def serialize_doc(doc):
     """Converts a MongoDB document to JSON serializable dict."""
     if doc and '_id' in doc:
-        doc['_id'] = str(doc['id'])
+        doc['_id'] = str(doc['_id'])
     return doc
 
 #define routes
@@ -50,7 +50,7 @@ def home():
 
 @app.route('/api/notes', methods=['POST'])
 def create_note():
-    if not notes_collection:
+    if notes_collection is None:
         return jsonify({"error": "Database not connected"}), 500
     try:
         data = request.get_json()
@@ -72,7 +72,7 @@ def create_note():
     
 @app.route('/api/notes', methods=['GET'])
 def get_notes():
-    if notes_collection == NotImplemented:
+    if notes_collection is None:
         return jsonify({"error": "Database not connected"}), 500
     
     try:
@@ -82,8 +82,16 @@ def get_notes():
     except OperationFailure as e:
         return jsonify({"error": "Database operation failed", "details": str(e)}), 500
     except Exception as e:
-        return jsonify({"error":"An error occurred", "details": str(e)}), 500
-        
+        return jsonify({"error":"An unexpected error occurred", "details": str(e)}), 500
+
+@app.route('/api/notes/<string:note_id>', methods=["DELETE"])
+def delete_note(note_id):
+    # data = request.get_json()
+    id = ObjectId(note_id)
+    result = notes_collection.delete_one({'_id': id})
+    
+    return jsonify({"message": "delete successful"}), 200
+            
     
 if __name__ == '__main__':
     if not client:

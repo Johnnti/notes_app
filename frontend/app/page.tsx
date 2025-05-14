@@ -38,7 +38,7 @@ export default function HomePage(): React.ReactElement {
             `HTTP error! status: ${response.status} ${response.statusText}`
         );
       }
-      const data = (await response.json()) as Note[];
+      const data = await response.json() as Note[];
       setNotes(data);
     } catch (e: unknown) {
       console.error("Failed to fetch notes: ", e);
@@ -143,8 +143,9 @@ export default function HomePage(): React.ReactElement {
         {notes.length > 0 && (
           <ul className="space-y-4">
             {notes.slice().reverse().map((note: Note) => (
-              <li key={note._id} className="p-4 border border-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out">
-                <p className="whitespace-pre-wrap text-gray-800">{note.content}</p>
+              <li key={note._id} className="p-4 border border-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out flex">
+                <p className="w-1 whitespace-pre-wrap text-gray-800">{note.content}</p>
+                <input type="button" className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-blue-50 focus:ring-opacity-50 transition duration-150 ease-in-out"/>
               </li>
             ))}
           </ul>
