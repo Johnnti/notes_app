@@ -1,102 +1,158 @@
-import Image from "next/image";
+"use client";
+import React from "react";
+import { useState, useEffect, useCallback } from "react";
 
-export default function Home() {
+interface Note {
+  _id: string;
+  content: string;
+  createdAt?: string;
+}
+
+type ApiError = {
+  error: string;
+  details?: string;
+};
+
+const API_URL = process.env.NEXT_PUBLIC_API_URI || "http://127.0.0.1:5000/api";
+
+export default function HomePage(): React.ReactElement {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [newNoteContent, setNewNoteContent] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchNotes = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/notes`);
+      if (!response.ok) {
+        let errorData: ApiError | null = null;
+        try {
+          errorData = (await response.json()) as ApiError;
+        } catch (jsonError) {
+          console.error("Response was not JSON: ", jsonError);
+        }
+        throw new Error(
+          errorData?.error ||
+            `HTTP error! status: ${response.status} ${response.statusText}`
+        );
+      }
+      const data = (await response.json()) as Note[];
+      setNotes(data);
+    } catch (e: unknown) {
+      console.error("Failed to fetch notes: ", e);
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("An unknown error occurred while fetching notes.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
+    e.preventDefault();
+    if (!newNoteContent.trim()) {
+      setError("Note content cannot be empty.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_URL}/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ content: newNoteContent }),
+      });
+      if (!response.ok) {
+        let errorData: ApiError | null = null;
+        try {
+          errorData = (await response.json()) as ApiError;
+        } catch (jsonError) {
+          console.error("Response was not json: ", jsonError);
+        }
+        throw new Error(
+          errorData?.error ||
+            `HTTP error! status: ${response.status} ${response.statusText}`
+        );
+      }
+      //const createdNote = await response.json() as Note;
+    } catch (e: unknown) {
+      console.error("Failed to create note: ", e);
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("An unknown error occurred while creating the note.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="container mx-auto p-4 font-sans">
+      <header className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-blue-600">Notes App</h1>
+        <p className="text-gray-600">
+          Next.js Fronted | Flask Backend | MongoDB
+        </p>
+      </header>
+      <form
+        onSubmit={handleSubmit}
+        className="mb-8 p-6 bg-white shadow-lg rounded-lg"
+      >
+        <textarea 
+        value={newNoteContent}
+        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewNoteContent(e.target.value) } 
+        placeholder="Enter your note here..."
+        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
+        rows={4}
+        disabled={isLoading}
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="mt-4 px-6 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-blue-50 focus:ring-opacity-50 disabled:bg-gray-400 transition duration-150 ease-in-out"
+        >
+        {isLoading? 'Adding...':'Add Note'}
+        </button>
+      </form>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+          <strong>Error: </strong>{error}
+          </div>
+      )}
+
+      <section className="bg-white shadow-lg rouned-lg p-6">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-700">Your Notes</h2>
+        {isLoading && notes.length === 0 && <p className="text-gray-500">Loading notes...</p>}
+        {!isLoading && notes.length === 0 && !error && (
+          <p className="text-gray-500">No notes yet. Add one above!</p>
+        )}
+        {notes.length > 0 && (
+          <ul className="space-y-4">
+            {notes.slice().reverse().map((note: Note) => (
+              <li key={note._id} className="p-4 border boder-gray-200 rounded-md bg-gray-50 hover:shadow-md transition-shadow duration-150 ease-in-out">
+                <p className="whitespace-pre-wrap text-gray-800">{note.content}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <footer className="text-center mt-12 py-4 border-t border-gray-200">
+        <p className="text-sm text-gray-500">&copy: {new Date().getFullYear()} John Nti Anokye</p>
       </footer>
     </div>
   );
